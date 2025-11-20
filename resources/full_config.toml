@@ -1,0 +1,123 @@
+##################################################
+# PROCESSOR
+##################################################
+
+[[processor]]
+name = "auth_logs_processor"
+type = "tail"
+
+  ##################################################
+  # SOURCES (multiple)
+  ##################################################
+
+  [[processor.sources]]
+  protocol = "file"
+  path = "/var/log/auth.log"
+
+  [[processor.sources]]
+  protocol = "tcp"
+  host = "0.0.0.0"
+  port = 9001
+
+
+  ##################################################
+  # PATTERNS (one or more)
+  ##################################################
+
+  [[processor.patterns]]
+  name = "ssh_failed_login"
+  regex = '^(?P<date>\w{3} \d{1,2}) (?P<time>\d{2}:\d{2}:\d{2}) (?P<host>[\w\-]+) (?P<process>[^ ]+): (?P<msg>.*)$'
+
+
+    ##################################################
+    # PARSERS (ordered)
+    ##################################################
+
+    # Parser #1
+    [[processor.patterns.parsers]]
+    order = 1
+    type = "regex_split"
+    field_in = "line"
+    regex = '^(?P<date>\w{3} \d{1,2}) (?P<time>\d{2}:\d{2}:\d{2}) (?P<host>[\w\-]+) (?P<process>[^ ]+): (?P<msg>.*)$'
+    fields_out = ["date", "time", "host", "process", "msg"]
+    keep_original = false
+
+    # Parser #2 – time formatting
+    [[processor.patterns.parsers]]
+    order = 2
+    type = "time_simple"
+    field_in = "time"
+    output = "time_iso"
+    format_in = "%H:%M:%S"
+    format_out = "%H:%M:%S"
+    keep_original = true
+
+    # Parser #3 – uppercase
+    [[processor.patterns.parsers]]
+    order = 3
+    type = "uppercase"
+    field_in = "process"
+    keep_original = false
+
+    # Parser #4 – count substring "invalid"
+    [[processor.patterns.parsers]]
+    order = 4
+    type = "count_pattern"
+    field_in = "msg"
+    regex = "invalid"
+    output = "invalid_count"
+    keep_original = true
+
+    # Parser #5 – global count aggregation
+    [[processor.patterns.parsers]]
+    order = 5
+    type = "global_count"
+    field_in = "invalid_count"
+    output = "total_invalid"
+
+    # Parser #6 – global max
+    [[processor.patterns.parsers]]
+    order = 6
+    type = "global_max"
+    field_in = "invalid_count"
+    output = "peak_invalid"
+
+    # Parser #7 – global latest timestamp
+    [[processor.patterns.parsers]]
+    order = 7
+    type = "global_latest"
+    field_in = "time_iso"
+    output = "last_seen"
+
+    # Parser #8 – drop fields
+    [[processor.patterns.parsers]]
+    order = 8
+    type = "drop_fields"
+    drop = ["host"]
+
+    # Parser #9 – format output summary
+    [[processor.patterns.parsers]]
+    order = 9
+    type = "format_append"
+    template = "At {date} {time_iso}, {process}: {msg}"
+    output = "summary"
+    keep_original = true
+
+
+    ##################################################
+    # SINKS (local + global)
+    ##################################################
+
+    [[processor.patterns.sinks]]
+    name = "local_json_output"
+    type = "json_file"
+    path = "/tmp/auth_processed.json"
+    operation = "append"
+    scope = "local"
+
+    [[processor.patterns.sinks]]
+    name = "global_stats_output"
+    type = "json_file"
+    path = "/tmp/auth_aggregate.json"
+    operation = "overwrite"
+    scope = "global"

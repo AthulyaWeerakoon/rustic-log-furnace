@@ -24,7 +24,7 @@ This means you can currently monitor a single log file, apply basic field extrac
 
 The ultimate goal for Rustic Log Furnace is to support complex, multi-stage data processing defined by a comprehensive TOML configuration file.
 
-**NOTE: Configuration via TOML is not yet implemented.** The structure below represents the **target architecture** and the full possible set of configurations can be found at [`resources/full_config.toml`](https://www.google.com/search?q=resources/full_config.toml).
+**NOTE: Configuration via TOML is not yet implemented.** The structure below represents the **target architecture** and the full possible set of configurations can be found at [`resources/full_config.toml`](https://github.com/AthulyaWeerakoon/rustic-log-furnace/blob/main/resources/full_config.toml).
 
 ### Configuration Concept
 
@@ -143,7 +143,7 @@ type = "tail"
 ## Getting Started
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/AthulyaWeerakoon/rustic-log-furnace.git](https://github.com/AthulyaWeerakoon/rustic-log-furnace.git)
+git clone https://github.com/AthulyaWeerakoon/rustic-log-furnace.git
 cd rustic-log-furnace
 ```
 ### 2. Build the project

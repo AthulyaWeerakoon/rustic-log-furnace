@@ -1,43 +1,24 @@
 // src/main.rs
+mod builder;
 mod pipeline;
 mod parsers;
 mod sources;
 mod sinks;
 mod pattern;
+mod config;
 
-use crate::pipeline::Processor;
-use crate::pattern::Pattern;
-use crate::sources::FileTailSource;
-use crate::parsers::{DropFieldsParser,RegexSplitParser};
-use crate::sinks::FileAppendSink;
+use crate::config::Config;
+use crate::builder::build_processors;
 
 
 fn main() {
-    let log_line_regex = r"^.+:[ ]*.*$"; 
+    let config = Config::load_from_file("../config.toml")
+        .expect("Failed to load config");
 
-    // Build the Pattern
-    let mut pattern = Pattern::new(None, log_line_regex)
-        .expect("Failed to compile regex");
+    let processors = build_processors(config)
+        .expect("Failed to build processors");
 
-    // Add two parsers to the pattern
-    pattern.add_parser(Box::new(RegexSplitParser::new(
-        r"^(?P<date>\w{3} \d{1,2}) (?P<time>\d{2}:\d{2}:\d{2}) (?P<host>[\w\-]+) (?P<process>[^ ]+): (?P<msg>.*)$",
-        None
-    )));
-    pattern.add_parser(Box::new(DropFieldsParser::new(vec!["host"])));
-
-    // Add one sink to the pattern
-    pattern.add_sink(Box::new(FileAppendSink::new(None, "/tmp/auth_processed.log")));
-
-    // Build the Processor (which manages sources and patterns)
-    let mut processor = Processor::new(None);
-
-    // Add one source to the processor
-    processor.add_source(Box::new(FileTailSource::new(None, "/var/log/auth.log")));
-
-    // Add the fully configured pattern to the processor
-    processor.add_pattern(Box::new(pattern)); 
-
-    // Start processing
-    processor.run();
+    for processor in processors {
+        processor.run();
+    }
 }

@@ -8,11 +8,11 @@ pub struct RegexSplitParser {
 }
 
 impl RegexSplitParser {
-    pub fn new(pattern: &str, field_name: Option<&str>) -> Self {
-        Self { 
-            regex: Regex::new(pattern).unwrap(),
+    pub fn new(pattern: &str, field_name: Option<&str>) -> Result<Self, regex::Error> {
+        Ok(Self {
+            regex: Regex::new(pattern)?,
             field_to_split: field_name.unwrap_or("line").to_string(),
-        }
+        })
     }
 }
 

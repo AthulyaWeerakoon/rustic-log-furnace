@@ -112,16 +112,14 @@ fn build_sink(conf: SinkConfig) -> Result<Box<dyn Sink + Send>> {
     match conf {
 
         SinkConfig::JsonFile { name, path, operation } => {
-            match operation.as_str() {
-                "append" => Ok(Box::new(
+            match operation {
+                SinkOperation::Append => Ok(Box::new(
                     FileAppendSink::new(name.as_deref(), &path)
                 )),
 
-                "overwrite_with_last" => {
+                SinkOperation::OverwriteWithLast => {
                     anyhow::bail!("overwrite_with_last not implemented yet");
                 }
-
-                _ => anyhow::bail!("Invalid sink operation"),
             }
         }
     }

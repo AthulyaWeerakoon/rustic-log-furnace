@@ -66,6 +66,7 @@ pub enum ParserConfig {
     RegexSplit {
         order: u32,
         field_in: String,
+        // NOTE: regex validity is checked during pipeline build, not config validation
         regex: String,
         #[serde(default)]
         keep_original: bool,
@@ -159,8 +160,8 @@ pub enum SinkConfig {
         name: Option<String>,
         path: String,
 
-        #[serde(default = "default_operation")]
-        operation: String,
+        #[serde(default)]
+        operation: SinkOperation,
     },
 }
 
@@ -192,8 +193,4 @@ impl NamedComponent for SinkConfig {
             SinkConfig::JsonFile { name, .. } => name
         }
     }
-}
-
-fn default_operation() -> String {
-    "append".to_string()
 }

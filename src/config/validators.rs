@@ -101,12 +101,8 @@ pub(crate) fn validate_parsers(parsers: &[ParserConfig]) -> Result<(), Validatio
 pub(crate) fn validate_sinks(sinks: &[SinkConfig]) -> Result<(), ValidationError> {
     for s in sinks {
         match s {
-            SinkConfig::JsonFile { path, operation, .. } => {
+            SinkConfig::JsonFile { path, .. } => {
                 validate_absolute_path(path)?;
-
-                if operation != "append" && operation != "overwrite_with_last" {
-                    return Err(ValidationError::new("invalid_sink_operation"));
-                }
             }
         }
     }
